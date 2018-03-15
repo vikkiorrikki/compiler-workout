@@ -81,30 +81,51 @@ open SM
    of x86 instructions
 *)
 let rec compile env = function
-| [] -> env, []
-| instr :: code ->
-   let env, asm =
-     match instr with
-     | CONST n ->
-        let x, env = env#allocate in
-        env, [Mov (L n, x)]
-
-     | ST x ->
-        let y, env = (env#global x)#pop in
-        env, (match y with S _ -> [Mov (y, eax); Mov (eax, M (env#loc x))] | _ -> [Mov (y, M (env#loc x))])
-        
-     | LD x ->
-        let y, env = (env#global x)#allocate in
-        env, (match y with S _ -> [Mov (M (env#loc x), eax); Mov (eax, y)] | _ -> [Mov (M (env#loc x), y)])
-        
-     | WRITE ->
-        let x, env = env#pop in
-        env, [Push x; Call "Lwrite"; Pop eax]
-               
-     | _       -> failwith "Not yet implemented"
-   in
-   let env, asm' = compile env code in
-   env, asm @ asm'
+	| [] -> env, []
+	| instr :: code ->
+	   let env, asm =
+		 match instr with
+		 | CONST n ->
+			let x, env = env#allocate in
+			env, [Mov (L n, x)]
+			
+		 | ST x ->
+			let y, env = (env#global x)#pop in
+			env, (match y with S _ -> [Mov (y, eax); Mov (eax, M (env#loc x))] | _ -> [Mov (y, M (env#loc x))])
+		 
+		 | LD x ->
+			let y, env = (env#global x)#allocate in
+			env, (match y with S _ -> [Mov (M (env#loc x), eax); Mov (eax, y)] | _ -> [Mov (M (env#loc x), y)])
+		 
+		 | WRITE ->
+			let x, env = env#pop in
+			env, [Push x; Call "Lwrite"; Pop eax]
+		 
+		 | READ ->
+			let x, env = env#allocate in
+			env, [Call "Lread"; Mov (eax, x)]
+		 
+		 | BINOP oper ->
+			let x, y, env = env#pop2 in
+			let res, env = env#allocate in
+			env, match oper with
+				| "+" | "-" | "*" -> 
+					[ Mov (y, eax); Binop (oper, x, eax); Mov (eax, y) ]
+				| "/" -> 
+					[ Mov (y, eax); Cltd; IDiv x; Mov (eax, res) ]
+				| "%" -> 
+					[ Mov (y, eax); Cltd; IDiv x; Mov (edx, res) ]
+				| "&&" | "!!" -> 
+					[ Binop ("^", eax, eax); Binop ("^", edx, edx); Binop ("cmp", L 0, y); Set ("nz", "%al"); Binop ("cmp", L 0, x); Set ("nz", "%dl"); Binop (oper, eax, edx); Mov (edx, res) ]
+				| ">"  -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("g", "%al");  Mov (eax, res)]
+				| ">=" -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("ge", "%al"); Mov (eax, res)]
+				| "<"  -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("l", "%al");  Mov (eax, res)]
+				| "<=" -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("le", "%al"); Mov (eax, res)]
+				| "==" -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("e", "%al");  Mov (eax, res)]
+				| "!=" -> [Mov (y, eax); Binop ("cmp", x, eax); Mov (eax, y)] @ [Mov (L 0, eax); Set ("ne", "%al"); Mov (eax, res)]
+	   in 
+	   let env, asm' = compile env code in
+	   env, asm @ asm'
 
 (* A set of strings *)           
 module S = Set.Make (String)

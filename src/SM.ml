@@ -23,8 +23,24 @@ type config = int list * Stmt.config
      val eval : config -> prg -> config
 
    Takes a configuration and a program, and returns a configuration as a result
-*)                         
-let rec eval conf prog = failwith "Not yet implemented"
+                        
+let eval _ = failwith "Not yet implemented"*)
+
+let rec eval conf prog = 
+    let conf_upd instr ((st, (s, i, o)) : config) = 
+		match instr with
+		| BINOP bin -> 
+			(match st with 
+				  y :: x :: t_end -> ((Expr.calc_bin bin x y) :: t_end, (s, i ,o))) 
+		| CONST v -> (v :: st, (s, i, o))
+		| READ -> let num = List.hd i in (num :: st, (s, List.tl i, o))
+		| WRITE -> let num = List.hd st in (List.tl st, (s, i, o @ [num]))
+		| LD x -> ((s x) :: st, (s, i, o))
+		| ST x -> let num = List.hd st in (List.tl st, (Expr.update x num s, i, o)) in
+	match prog with
+	| [] -> conf    
+	| instr :: tail -> 
+		eval (conf_upd instr conf) tail;;
 
 (* Top-level evaluation
 
@@ -32,7 +48,14 @@ let rec eval conf prog = failwith "Not yet implemented"
 
    Takes a program, an input stream, and returns an output stream this program calculates
 *)
-let run p i = let (_, (_, _, o)) = eval ([], (Expr.empty, i, [])) p in o
+let run p i = let (_, (_, _, o)) = eval ([], (Language.Expr.empty, i, [])) p in o
+
+
+let rec ex_comp (exp : Expr.t) = 
+	match exp with
+	| Expr.Const v -> [CONST v]
+	| Expr.Var v -> [LD v]
+	| Expr.Binop (oper, expr1, expr2) -> (ex_comp expr1) @ (ex_comp expr2) @ [BINOP oper];;
 
 (* Stack machine compiler
 
@@ -40,15 +63,12 @@ let run p i = let (_, (_, _, o)) = eval ([], (Expr.empty, i, [])) p in o
 
    Takes a program in the source language and returns an equivalent program for the
    stack machine
-*)
-let rec compile =
-  let rec expr = function
-  | Expr.Var   x          -> [LD x]
-  | Expr.Const n          -> [CONST n]
-  | Expr.Binop (op, x, y) -> expr x @ expr y @ [BINOP op]
-  in
-  function
-  | Stmt.Seq (s1, s2)  -> compile s1 @ compile s2
-  | Stmt.Read x        -> [READ; ST x]
-  | Stmt.Write e       -> expr e @ [WRITE]
-  | Stmt.Assign (x, e) -> expr e @ [ST x]
+ 
+let compile _ = failwith "Not yet implemented"*)
+
+let rec compile (st : Stmt.t) =
+    match st with
+	| Stmt.Assign (x, expr) -> (ex_comp expr) @ [ST x]
+    | Stmt.Read x ->  [READ; ST x]
+    | Stmt.Write expr -> (ex_comp expr) @ [WRITE]
+    | Stmt.Seq (l, r) -> (compile l) @ (compile r)
