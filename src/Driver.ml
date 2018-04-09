@@ -6,11 +6,7 @@ let parse infile =
     (object
        inherit Matcher.t s
        inherit Util.Lexers.decimal s
-<<<<<<< HEAD
-       inherit Util.Lexers.ident ["read"; "write"; "skip"; (* some other keywords *)] s
-=======
        inherit Util.Lexers.ident ["read"; "write"; "skip"; "if"; "then"; "else"; "elif"; "fi"; "while"; "do"; "od"; "repeat"; "until"; "for"; (* add new keywords *)] s
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
        inherit Util.Lexers.skip [
 	 Matcher.Skip.whitespaces " \t\n";
 	 Matcher.Skip.lineComment "--";

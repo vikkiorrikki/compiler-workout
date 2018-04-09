@@ -31,11 +31,7 @@ type config = (prg * State.t) list * int list * Stmt.config
    Takes an environment, a configuration and a program, and returns a configuration as a result. The
    environment is used to locate a label to jump to (via method env#labeled <label_name>)
 *)                         
-<<<<<<< HEAD
-let rec eval env conf prog = failwith "Not yet implemented"
-=======
 let eval env ((cstack, stack, ((st, i, o) as c)) as conf) = failwith "Not implemented"
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
 
 (* Top-level evaluation
 
@@ -60,8 +56,4 @@ let run p i =
    Takes a program in the source language and returns an equivalent program for the
    stack machine
 *)
-<<<<<<< HEAD
-let compile p = failwith "Not yet implemented"
-=======
 let compile (defs, p) = failwith "Not implemented"
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6

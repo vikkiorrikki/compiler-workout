@@ -60,11 +60,7 @@ module Expr =
        Takes a state and an expression, and returns the value of the expression in 
        the given state.
     *)                                                       
-<<<<<<< HEAD
-    let eval st expr = failwith "Not yet implemented"
-=======
     let eval st expr = failwith "Not implemented"      
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
 
     (* Expression parser. You can use the following terminals:
 
@@ -73,11 +69,7 @@ module Expr =
                                                                                                                   
     *)
     ostap (                                      
-<<<<<<< HEAD
-      parse: empty {failwith "Not yet implemented"}
-=======
       parse: empty {failwith "Not implemented"}
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
     )
     
   end
@@ -95,12 +87,8 @@ module Stmt =
     (* empty statement                  *) | Skip
     (* conditional                      *) | If     of Expr.t * t * t
     (* loop with a pre-condition        *) | While  of Expr.t * t
-<<<<<<< HEAD
-    (* loop with a post-condition       *) (* add yourself *)  with show
-=======
     (* loop with a post-condition       *) | Repeat of t * Expr.t
     (* call a procedure                 *) | Call   of string * Expr.t list with show
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
                                                                     
     (* The type of configuration: a state, an input stream, an output stream *)
     type config = State.t * int list * int list 
@@ -116,19 +104,11 @@ module Stmt =
 
        which returns a list of formal parameters, local variables, and a body for given definition
     *)
-<<<<<<< HEAD
-    let rec eval conf stmt = failwith "Not yet implemented"
-                               
-    (* Statement parser *)
-    ostap (
-      parse: empty {failwith "Not yet implemented"}
-=======
     let eval env ((st, i, o) as conf) stmt = failwith "Not implemented"
                                 
     (* Statement parser *)
     ostap (
       parse: empty {failwith "Not implemented"}
->>>>>>> 2645f1433c10d80b14d12f9f80112de5960691d6
     )
       
   end
