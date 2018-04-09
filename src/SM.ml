@@ -27,8 +27,31 @@ type config = int list * Stmt.config
 
    Takes an environment, a configuration and a program, and returns a configuration as a result. The
    environment is used to locate a label to jump to (via method env#labeled <label_name>)
-*)                         
-let rec eval env conf prog = failwith "Not yet implemented"
+                        
+let rec eval env conf prog = failwith "Not yet implemented"*)
+
+let rec eval env (st, (s, i, o)) = function
+	| [] -> st, (s, i, o)    
+	| instr :: tail -> 
+		match instr with
+		| BINOP bin -> 
+			(match st with 
+				  y :: x :: t_end -> eval env ((Expr.calc_bin bin x y) :: t_end, (s, i ,o))) tail
+		| CONST v -> eval env (v :: st, (s, i, o)) tail
+		| READ -> let num = List.hd i in eval env (num :: st, (s, List.tl i, o)) tail
+		| WRITE -> let num = List.hd st in eval env (List.tl st, (s, i, o @ [num])) tail
+		| LD x -> eval env ((s x) :: st, (s, i, o)) tail
+		| ST x -> let num = List.hd st in eval env (List.tl st, (Expr.update x num s, i, o)) tail
+		| LABEL _ -> eval env (st, (s, i, o)) tail
+		| JMP nm -> eval env (st, (s, i, o)) (env#labeled nm)
+		| CJMP (condition, nm) -> 
+		let value::st' = st in
+		let x = match condition with
+		| "nz" -> value <> 0
+		| "z" -> value = 0 in
+		eval env (st', (s, i, o)) (if (x) then (env#labeled nm) else tail)
+		
+
 
 (* Top-level evaluation
 
@@ -52,5 +75,38 @@ let run p i =
 
    Takes a program in the source language and returns an equivalent program for the
    stack machine
-*)
-let compile p = failwith "Not yet implemented"
+
+let compile p = failwith "Not yet implemented"*)
+
+let env = object
+    val mutable count = 0
+    method l_new = count <- (count + 1); "L" ^ string_of_int count
+  end 
+
+let rec compile =
+	let rec ex_comp = function
+	| Expr.Const v -> [CONST v]
+	| Expr.Var v -> [LD v]
+	| Expr.Binop (oper, expr1, expr2) -> (ex_comp expr1) @ (ex_comp expr2) @ [BINOP oper]
+	in
+	function
+	| Stmt.Assign (x, expr) -> (ex_comp expr) @ [ST x]
+    | Stmt.Read x ->  [READ; ST x]
+    | Stmt.Write expr -> (ex_comp expr) @ [WRITE]
+    | Stmt.Seq (l, r) -> (compile l) @ (compile r)
+	| Stmt.Skip -> []
+	| Stmt.If (expr, l, r) -> 
+	let l_else = env#l_new in
+	let l_end = env#l_new in
+	let curr = compile l in
+	let last = compile r in
+	(ex_comp expr @ [CJMP ("z", l_else)] @ curr @ [JMP l_end] @ [LABEL l_else] @ last @ [LABEL l_end])
+	| Stmt.While (expr, st) ->
+	let l_end = env#l_new in
+	let l_loop = env#l_new in
+	let body = compile st in
+	([JMP l_end] @ [LABEL l_loop] @ body @ [LABEL l_end] @ ex_comp expr @ [CJMP ("nz", l_loop)])
+	| Stmt.Repeat (expr, st) ->
+	let l_loop = env#l_new in
+	let body = compile st in 
+	([LABEL l_loop] @ body @ ex_comp expr @ [CJMP ("z", l_loop)])
