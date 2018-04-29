@@ -73,9 +73,8 @@ module Expr =
 
        which takes an environment (of the same type), a name of the function, a list of actual parameters and a configuration, 
        an returns resulting configuration
-                                                        
+                                                   
     let rec eval env ((st, i, o, r) as conf) expr = failwith "Not implemented"*)
-	
 	let rec calc_bin bin x y = 
 	let int_to_bool x = 
 		if x = 0 then false else true
@@ -119,7 +118,7 @@ module Expr =
 			| [] -> [], conf
 			in let c_args', conf' = c_args env conf arg
 			in env#definition env nm c_args' conf'
-         
+			
     (* Expression parser. You can use the following terminals:
 
          IDENT   --- a non-empty identifier a-zA-Z[a-zA-Z0-9_]* as a string
@@ -172,7 +171,7 @@ module Stmt =
 
        Takes an environment, a configuration and a statement, and returns another configuration. The 
        environment is the same as for expressions
-    
+   
     let rec eval env ((st, i, o, r) as conf) k stmt = failwith "Not implemnted"*)
 	let rec eval env conf k stmt =
 		let diam stmt k = 
@@ -248,7 +247,7 @@ module Definition =
 
     ostap (     
       (*parse: empty {failwith "Not implemented"}*)
-      arg  : IDENT;
+	  arg  : IDENT;
       parse: %"fun" name:IDENT "(" args:!(Util.list0 arg) ")"
          locs:(%"local" !(Util.list arg))?
         "{" body:!(Stmt.parse) "}" {
@@ -275,8 +274,8 @@ let eval (defs, body) i =
   let _, _, o, _ =
     Stmt.eval
       (object
-         method definition env f args (st, i, o, r) =
-           let xs, locs, s      = snd @@ M.find f m in
+         method definition env f args (st, i, o, r) =                                                                      
+           let xs, locs, s      =  snd @@ M.find f m in
            let st'              = List.fold_left (fun st (x, a) -> State.update x a st) (State.enter st (xs @ locs)) (List.combine xs args) in
            let st'', i', o', r' = Stmt.eval env (st', i, o, r) Stmt.Skip s in
            (State.leave st'' st, i', o', r')
