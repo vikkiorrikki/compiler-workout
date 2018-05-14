@@ -31,14 +31,7 @@ type config = (prg * State.t) list * Value.t list * Expr.config
 
    Takes an environment, a configuration and a program, and returns a configuration as a result. The
    environment is used to locate a label to jump to (via method env#labeled <label_name>)
-*)
-let split n l =
-  let rec unzip (taken, rest) = function
-  | 0 -> (List.rev taken, rest)
-  | n -> let h::tl = rest in unzip (h::taken, tl) (n-1)
-  in
-  unzip ([], l) n
-        
+*)                                                  
 let rec eval env ((cstack, stack, ((st, i, o) as c)) as conf) prg = failwith "Not implemented"
 
 (* Top-level evaluation
